@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>like a spice</title>
+    <meta http-equiv="refresh" content="300">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script> 
+ </head>
+
+ <body class="p1">
+    <p id = "myid"></p>
+    Barcode Html5QrcodeScanner<br>
+    <div style="width: 500px" id="reader"></div>
+    <p id = "myresults"></p>
+    <div id="myr2"></div>
+    <div id="myr3"></div>
+    <br>
+
+<script src="https://unpkg.com/html5-qrcode" type="text/javascript">
+</script>
+
+<script>    
+function onScanSuccess(decodedText, decodedResult) {
+    // Handle on success condition with the decoded text or result.
+    console.log(`Scan result: ${decodedText}`, decodedResult);
+}
+
+var html5QrcodeScanner = new Html5QrcodeScanner(
+	"reader", { fps: 15, 
+        qrbox: 500 ,
+        supportedScanTypes: Html5QrcodeScanType.SCAN_TYPE_CAMERA,
+
+        formatsToSupport: [ Html5QrcodeSupportedFormats.EAN_8 ] 
+    }
+);
+
+function onScanSuccess(decodedText, decodedResult) {
+    // Handle on success condition with the decoded text or result.
+    if( lastScan == decodedText )
+        console.log(`Scan same: ${decodedText}`, decodedResult);
+    else {
+        let beep = new Audio('Barcode-scanner-beep-sound.mp3');
+        beep.play();
+        console.log(`Scan: ${decodedText}`, decodedResult);
+        var items = '<H1 id=9999>Scan ' + decodedText + "</H1>";
+        myr = document.getElementById("myr2");
+        myr.innerHTML = items;
+        lastScan = decodedText;
+        getProductDetails( lastScan )
+    }
+}
+
+function onScanError(errorMessage) {
+    // handle on error condition, with error message
+}
+
+var html5QrcodeScanner = new Html5QrcodeScanner(
+    "reader", { fps: 20, qrbox: 150 }
+);
+
+function getProductDetails( barcode ) {
+    console.log( "Getting:", barcode ); 
+    var params = {
+            "api_key": "22a765be4d804e949b016174387d697e" ,
+            "code": barcode
+    };
+                
+    $.ajax({
+        url: "https://world.openfoodfacts.net/api/v2/product/" + barcode,
+        type: "GET"
+    })
+    .done(function(data) {
+        var items = [];                
+        brand = "";
+        if( data.product.brands != undefined)
+            brand = data.product.brands;
+        else if( data.product.brand_owner != undefined)
+            brand = data.product.brand_owner;
+
+        myr = document.getElementById("myr3");
+        myr.innerHTML = "<H2>" + brand + " " + data.product.product_name + "</H2><br>";
+        if( data.product.image_url != undefined )
+            myr.innerHTML += "<img src='" + data.product.image_url + "' style='width:100px;'>" 
+    })            
+    .fail(function() {
+        console.log( "error:", params );
+        alert("error");
+    });
+    console.log( "Show:", barcode );
+};
+
+
+
+html5QrcodeScanner.render(onScanSuccess, onScanError);
+
+
+var myresults = document.getElementById("myresults");
+var lastScan = "none";
+
+
+
+
+</script>
+
+</body>
+</html>
